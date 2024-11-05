@@ -69,7 +69,9 @@ public class ConnectionHandler extends Thread {
 
     if (result.equals("ERROR")) throw new Exception("Failed to exchange the key");
 
-    Process process = Runtime.getRuntime().exec("openssl dhparam -text 1024");
+    ProcessBuilder processBuilder = new ProcessBuilder();
+    processBuilder.command("openssl", "dhparam", "-text", "1024");
+    Process process = processBuilder.start();
 
     BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
     StringBuilder processOutput = new StringBuilder();
@@ -78,6 +80,8 @@ public class ConnectionHandler extends Thread {
     while ((line = reader.readLine()) != null) {
       processOutput.append(line).append("\n");
     }
+
+    process.waitFor();
 
     Pattern pPattern = Pattern.compile("P:\\s*([0-9a-fA-F:]+)");
     Matcher pMatcher = pPattern.matcher(processOutput.toString());
