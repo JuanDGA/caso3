@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ConnectionHandler extends Thread {
+public class ConnectionHandler implements Runnable {
   private final Socket socket;
   private final PrivateKey privateKey;
 
@@ -163,6 +163,7 @@ public class ConnectionHandler extends Thread {
 
   @Override
   public void run() {
+    System.out.println("Server accepted a client. Delegate: " + Thread.currentThread().getName());
     try (
       BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       PrintWriter output =  new PrintWriter(socket.getOutputStream(), true)
@@ -227,7 +228,7 @@ public class ConnectionHandler extends Thread {
     } finally {
       try {
         socket.close();
-        System.out.println("Socket closed");
+        System.out.println("Socket closed. Delegate: " + Thread.currentThread().getName());
       } catch (IOException e) {
         e.printStackTrace(System.err);
       }

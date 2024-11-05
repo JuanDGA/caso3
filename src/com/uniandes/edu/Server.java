@@ -16,10 +16,10 @@ import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Server {
   private static final Map<Integer, Status> statusById = new HashMap<>();
@@ -69,12 +69,23 @@ public class Server {
     this.publicKey = keyFactory.generatePublic(publicKeySpec);
   }
 
+  // Iterative
   public void openSocket(int port) throws IOException {
     try (ServerSocket serverSocket = new ServerSocket(port)) {
       while (true) {
         Socket socket = serverSocket.accept();
-        System.out.println("Server accepted a client");
-        new ConnectionHandler(socket, privateKey).start();
+        new ConnectionHandler(socket, privateKey).run();
+      }
+    }
+  }
+
+  // Concurrent
+  public void openSocket(int port, int maxDelegates) throws IOException {
+    try (ServerSocket serverSocket = new ServerSocket(port)) {
+      ExecutorService executor = Executors.newFixedThreadPool(maxDelegates);
+      while (true) {
+        Socket socket = serverSocket.accept();
+        executor.submit(new ConnectionHandler(socket, privateKey));
       }
     }
   }
@@ -119,8 +130,18 @@ public class Server {
         server.loadUsersTable();
         server.loadKeys();
         System.out.println("Llaves cargadas exitosamente");
-        System.out.println("Escuchando clientes en puerto 8000...");
-        server.openSocket(8000);
+        System.out.print("Desea correr el serivdor en modo iterativo? (y/n)\n> ");
+        String r = input.next().toLowerCase();
+
+        if (r.equals("y")) {
+          System.out.println("Escuchando clientes en puerto 8000...\n");
+          server.openSocket(8000);
+        } else {
+          System.out.print("Ingrese la cantidad máxima de delegados\n> ");
+          int max = input.nextInt();
+          System.out.println("Escuchando clientes en puerto 8000...\n");
+          server.openSocket(8000, max);
+        }
         break;
       default:
         System.out.println("Opcion no valida");
