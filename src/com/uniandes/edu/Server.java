@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -20,7 +22,9 @@ import java.util.Scanner;
 import java.util.Set;
 
 public class Server {
-  private final Map<Integer, Status> statusById = new HashMap<>();
+  private static final Map<Integer, Status> statusById = new HashMap<>();
+  private static final Map<String, Package> packageById = new HashMap<>();
+
   private static final String privateKeyPath = "privateData/key";
   private static final String publicKeyPath = "data/key.pub";
 
@@ -35,6 +39,23 @@ public class Server {
       int id = Integer.parseInt(split[0]);
       statusById.put(id, Status.valueOf(split[1]));
     }
+    statusScanner.close();
+
+    Scanner packageScanner = new Scanner(new File("privateData/packages.txt"));
+
+    while (packageScanner.hasNextLine()) {
+      String line = packageScanner.nextLine();
+      String[] parts = line.split(";");
+      packageById.put(parts[1], new Package(parts[0], statusById.get(Integer.parseInt(parts[2]))));
+    }
+
+    packageScanner.close();
+  }
+
+  public static Package findPackage(String userId, String packageId) {
+    Package p = packageById.get(packageId);
+    if (p == null || !p.getUserId().equals(userId)) return null;
+    return p;
   }
 
   public void loadKeys() throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
@@ -52,8 +73,8 @@ public class Server {
     try (ServerSocket serverSocket = new ServerSocket(port)) {
       while (true) {
         Socket socket = serverSocket.accept();
-        System.out.println();
-        new ConnectionHandler(socket).start();
+        System.out.println("Server accepted a client");
+        new ConnectionHandler(socket, privateKey).start();
       }
     }
   }
