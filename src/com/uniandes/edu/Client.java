@@ -12,24 +12,26 @@ import java.nio.file.Paths;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class Client {
   private static final String serverPublicKeyPath = "data/key.pub";
-  private final PublicKey serverKey;
+  private static PublicKey serverKey;
 
   private byte[] symmetricCipherKey;
   private byte[] symmetricHMACKey;
   private byte[] iv = new byte[16];
 
-  public Client() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+  private static boolean delegateMode = false;
+
+  public static void loadKeys() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
     KeyFactory keyFactory = KeyFactory.getInstance("RSA");
     byte[] publicKeyBytes = Files.readAllBytes(Paths.get(serverPublicKeyPath));
     X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(publicKeyBytes);
-    this.serverKey = keyFactory.generatePublic(publicKeySpec);
+    serverKey = keyFactory.generatePublic(publicKeySpec);
   }
 
   private String generateChallenge() {
@@ -145,7 +147,39 @@ public class Client {
     return mac.doFinal(data);
   }
 
+  public static void start(String id, String packageId) { // Does not matter if it runs delegate or not
+    Client client = new Client();
+    client.askServer(id, packageId);
+  }
+
+  public static void start(int amount) throws InterruptedException {
+    Random random = new Random();
+    System.out.println(delegateMode);
+    if (!delegateMode) {
+      for (int i = 0; i < amount; i++) {
+        String userId = "user" + random.nextInt(6);
+        String packageId = "p" + random.nextInt(32);
+        Client client = new Client();
+        client.askServer(userId, packageId);
+      }
+    } else {
+      ExecutorService executor = Executors.newFixedThreadPool(amount);
+      for (int i = 0; i < amount; i++) {
+        String userId = "user" + random.nextInt(6);
+        String packageId = "p" + random.nextInt(32);
+        executor.submit(() -> {
+          Client client = new Client();
+          client.askServer(userId, packageId);
+          System.out.println(Thread.currentThread().getName() + ": Finished");
+        });
+      }
+      executor.shutdown();
+      executor.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+    }
+  }
+
   public void askServer(String id, String packageId) {
+    System.out.println("Delegate client is connecting. Delegate: " + Thread.currentThread().getName());
     try (
         Socket socket = new Socket(Inet4Address.getLocalHost().getHostAddress(), 8000);
         OutputStream outputStream = socket.getOutputStream();
@@ -191,7 +225,7 @@ public class Client {
           throw new Exception("Integrity violated");
         }
 
-        System.out.println("El paquete consultado está en estado: " + new String(decryptedStatus));
+        System.out.println(Thread.currentThread().getName() + ": El paquete consultado está en estado: " + new String(decryptedStatus));
 
         writer.println("TERMINAR");
         socket.close();
@@ -205,15 +239,32 @@ public class Client {
     }
   }
 
-  public static void main(String[] args) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+  private static void setDelegateMode(boolean useDelegateMode) {
+    delegateMode = useDelegateMode;
+  }
+
+  public static void main(String[] args) throws Exception {
     System.out.println("Cargando llave publica del servidor...");
-    Client client = new Client();
+    Client.loadKeys();
 
     Scanner scanner = new Scanner(System.in);
-    System.out.println("Por favor ingrese el id de usuario:");
-    String userId = scanner.next();
-    System.out.println("Por favor ingrese el id de paquete a consultar:");
-    String packageId = scanner.next();
-    client.askServer(userId, packageId);
+
+    System.out.print("Desea correr el cliente en modo iterativo? (y/n)\n> ");
+
+    Client.setDelegateMode(scanner.next().equalsIgnoreCase("n"));
+
+    System.out.print("Ingrese la cantidad de consultas a envíar.\n Para más de una consulta los datos serán aleatoreos.\n> ");
+
+    int amount = scanner.nextInt();
+
+    if (amount == 1) {
+      System.out.println("Por favor ingrese el id de usuario:");
+      String userId = scanner.next();
+      System.out.println("Por favor ingrese el id de paquete a consultar:");
+      String packageId = scanner.next();
+      Client.start(userId, packageId);
+    } else {
+      Client.start(amount);
+    }
   }
 }

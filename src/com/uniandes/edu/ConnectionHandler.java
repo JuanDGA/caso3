@@ -163,7 +163,8 @@ public class ConnectionHandler implements Runnable {
 
   @Override
   public void run() {
-    System.out.println("Server accepted a client. Delegate: " + Thread.currentThread().getName());
+    System.out.println("Server accepted a client. Delegate: " + Thread.currentThread().getName() + "\n" +
+        "Socket: " + socket.toString());
     try (
       BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       PrintWriter output =  new PrintWriter(socket.getOutputStream(), true)
@@ -228,10 +229,10 @@ public class ConnectionHandler implements Runnable {
     } finally {
       try {
         socket.close();
-        System.out.println("Socket closed. Delegate: " + Thread.currentThread().getName());
       } catch (IOException e) {
         e.printStackTrace(System.err);
       }
     }
+    System.out.println("Socket closed. Delegate: " + Thread.currentThread().getName());
   }
 }
