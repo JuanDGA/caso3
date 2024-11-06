@@ -236,7 +236,7 @@ public class ConnectionHandler implements Runnable {
       Time symmetricTime = new Time();
       byte[] encryptedResponse = encryptWithSymmetricKey(response.getBytes());
       symmetricTime.close();
-      TimeCollector.saveSymmetric(symmetricTime);
+      //TimeCollector.saveSymmetric(symmetricTime);
 
       Time asymmetricTime = new Time();
 
@@ -245,7 +245,7 @@ public class ConnectionHandler implements Runnable {
       cipher.doFinal(response.getBytes());
 
       asymmetricTime.close();
-      TimeCollector.saveAsymmetric(asymmetricTime);
+      //TimeCollector.saveAsymmetric(asymmetricTime);
 
       byte[] responseHMAC = getHMAC(response.getBytes());
 

@@ -41,10 +41,10 @@ public class Client {
     Random random = new Random();
     System.out.println(delegateMode);
     if (!delegateMode) {
+      Client client = new Client();
       for (int i = 0; i < amount; i++) {
         String userId = "user" + random.nextInt(6);
         String packageId = "p" + random.nextInt(32);
-        Client client = new Client();
         client.askServer(userId, packageId);
       }
     } else {
