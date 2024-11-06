@@ -78,6 +78,8 @@ public class ConnectionHandler implements Runnable {
 
     if (result.equals("ERROR")) throw new Exception("Failed to exchange the key");
 
+    Time paramsGeneration = new Time();
+
     ProcessBuilder processBuilder = new ProcessBuilder();
     processBuilder.command("openssl", "dhparam", "-text", "1024");
     Process process = processBuilder.start();
@@ -116,6 +118,9 @@ public class ConnectionHandler implements Runnable {
 
     BigInteger x = generatePrivateSymmetricKey(p);
     BigInteger gToTheX = g.modPow(x, p);
+
+    paramsGeneration.close();
+    TimeCollector.saveIterativeParamsGeneration(paramsGeneration);
 
     output.println(g);
     output.println(p);
@@ -191,12 +196,19 @@ public class ConnectionHandler implements Runnable {
       String idMessage = input.readLine();
       String packageMessage = input.readLine();
 
+      Time verifyRequest = new Time();
+
       List<byte[]> idMessageAndHMAC = Arrays.stream(idMessage.split(";")).map(Base64.getDecoder()::decode).toList();
 
       byte[] decryptedId = decryptWithSymmetricKey(idMessageAndHMAC.getFirst());
       byte[] decryptedIdHMAC = getHMAC(decryptedId);
 
-      if (!Arrays.equals(decryptedIdHMAC, idMessageAndHMAC.getLast())) {
+      boolean verified = Arrays.equals(decryptedIdHMAC, idMessageAndHMAC.getLast());
+
+      verifyRequest.close();
+      TimeCollector.saveIterativeVerifyRequest(verifyRequest);
+
+      if (!verified) {
         // Integrity failed
         output.println("ERROR");
         throw new Exception("Integrity violated");

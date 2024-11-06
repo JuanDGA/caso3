@@ -56,4 +56,54 @@ public class TimeCollector {
   public static synchronized void saveIterativeChallenge(Time time) {
     iterativeChallengePrinter.println(time);
   }
+
+  public static synchronized void saveConcurrentChallenge(Time time, int delegates) {
+    switch (delegates) {
+      case 4:
+        concurrentChallengePrinter4Delegates.println(time);
+        break;
+      case 8:
+        concurrentChallengePrinter8Delegates.println(time);
+        break;
+      case 32:
+        concurrentChallengePrinter32Delegates.println(time);
+        break;
+    }
+  }
+
+  public static synchronized void saveIterativeParamsGeneration(Time time) {
+    iterativeParamsGenerationPrinter.println(time);
+  }
+
+  public static synchronized void saveConcurrentParamsGeneration(Time time, int delegates) {
+    switch (delegates) {
+      case 4:
+        concurrentParamsGenerationPrinter4Delegates.println(time);
+        break;
+      case 8:
+        concurrentParamsGenerationPrinter8Delegates.println(time);
+        break;
+      case 32:
+        concurrentParamsGenerationPrinter32Delegates.println(time);
+        break;
+    }
+  }
+
+  public static synchronized void saveIterativeVerifyRequest(Time time) {
+    iterativeVerifyRequestPrinter.println(time);
+  }
+
+  public static synchronized void saveConcurrentVerifyRequest(Time time, int delegates) {
+    switch (delegates) {
+      case 4:
+        concurrentVerifyRequestPrinter4Delegates.println(time);
+        break;
+      case 8:
+        concurrentVerifyRequestPrinter8Delegates.println(time);
+        break;
+      case 32:
+        concurrentVerifyRequestPrinter32Delegates.println(time);
+        break;
+    }
+  }
 }
