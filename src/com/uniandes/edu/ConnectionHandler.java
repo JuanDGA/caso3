@@ -1,5 +1,8 @@
 package com.uniandes.edu;
 
+import com.uniandes.edu.times.Time;
+import com.uniandes.edu.times.TimeCollector;
+
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -61,9 +64,15 @@ public class ConnectionHandler implements Runnable {
   public void keyExchange(BufferedReader input, PrintWriter output) throws Exception {
     String r = input.readLine();
 
+    Time challengeTime = new Time();
+
     String decrypted = decryptWithPrivateKey(r);
 
     output.println(decrypted);
+
+    challengeTime.close();
+
+    TimeCollector.saveIterativeChallenge(challengeTime);
 
     String result = input.readLine();
 
