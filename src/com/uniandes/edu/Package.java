@@ -2,7 +2,7 @@ package com.uniandes.edu;
 
 public class Package {
   private final String userId;
-  private Status status;
+  private final Status status;
 
   public Package(String id, Status status) {
     this.userId = id;

@@ -1,11 +1,12 @@
 package com.uniandes.edu;
 
 import javax.crypto.*;
-import javax.crypto.interfaces.DHKey;
-import javax.crypto.spec.DHParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.math.BigInteger;
 import java.net.Socket;
 import java.security.*;
@@ -18,10 +19,9 @@ import java.util.regex.Pattern;
 public class ConnectionHandler implements Runnable {
   private final Socket socket;
   private final PrivateKey privateKey;
-
+  private final byte[] iv = new byte[16];
   private byte[] symmetricCipherKey;
   private byte[] symmetricHMACKey;
-  private final byte[] iv = new byte[16];
 
   public ConnectionHandler(Socket socket, PrivateKey privateKey) {
     this.socket = socket;
@@ -166,8 +166,8 @@ public class ConnectionHandler implements Runnable {
     System.out.println("Server accepted a client. Delegate: " + Thread.currentThread().getName() + "\n" +
         "Socket: " + socket.toString());
     try (
-      BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-      PrintWriter output =  new PrintWriter(socket.getOutputStream(), true)
+        BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        PrintWriter output = new PrintWriter(socket.getOutputStream(), true)
     ) {
       boolean waitForInit = true;
       String chunk;
