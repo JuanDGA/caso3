@@ -64,7 +64,7 @@ public class ConnectionHandler implements Runnable {
   public void keyExchange(BufferedReader input, PrintWriter output) throws Exception {
     String r = input.readLine();
 
-    Time challengeTime = new Time();
+    Time challengeTime = new Time("32-Clients");
 
     String decrypted = decryptWithPrivateKey(r);
 
@@ -72,13 +72,13 @@ public class ConnectionHandler implements Runnable {
 
     challengeTime.close();
 
-    TimeCollector.saveIterativeChallenge(challengeTime);
+    TimeCollector.saveConcurrentChallenge(challengeTime, 32);
 
     String result = input.readLine();
 
     if (result.equals("ERROR")) throw new Exception("Failed to exchange the key");
 
-    Time paramsGeneration = new Time();
+    Time paramsGeneration = new Time("32-Clients");
 
     ProcessBuilder processBuilder = new ProcessBuilder();
     processBuilder.command("openssl", "dhparam", "-text", "1024");
@@ -120,7 +120,7 @@ public class ConnectionHandler implements Runnable {
     BigInteger gToTheX = g.modPow(x, p);
 
     paramsGeneration.close();
-    TimeCollector.saveIterativeParamsGeneration(paramsGeneration);
+    TimeCollector.saveConcurrentParamsGeneration(paramsGeneration, 32);
 
     output.println(g);
     output.println(p);
@@ -196,7 +196,7 @@ public class ConnectionHandler implements Runnable {
       String idMessage = input.readLine();
       String packageMessage = input.readLine();
 
-      Time verifyRequest = new Time();
+      Time verifyRequest = new Time("32-Clients");
 
       List<byte[]> idMessageAndHMAC = Arrays.stream(idMessage.split(";")).map(Base64.getDecoder()::decode).toList();
 
@@ -206,7 +206,7 @@ public class ConnectionHandler implements Runnable {
       boolean verified = Arrays.equals(decryptedIdHMAC, idMessageAndHMAC.getLast());
 
       verifyRequest.close();
-      TimeCollector.saveIterativeVerifyRequest(verifyRequest);
+      TimeCollector.saveConcurrentVerifyRequest(verifyRequest, 32);
 
       if (!verified) {
         // Integrity failed
