@@ -20,6 +20,9 @@ public class TimeCollector {
   private final static PrintWriter concurrentVerifyRequestPrinter8Delegates;
   private final static PrintWriter concurrentVerifyRequestPrinter32Delegates;
 
+  private final static PrintWriter cipherWithSymmetricKey;
+  private final static PrintWriter cipherWithAsymmetricKey;
+
   static {
     try {
       iterativeChallengePrinter = new PrintWriter(
@@ -48,9 +51,22 @@ public class TimeCollector {
           new FileWriter("data/times/eightDelegatesVerifyRequest", true), true);
       concurrentVerifyRequestPrinter32Delegates = new PrintWriter(
           new FileWriter("data/times/thirtyTwoDelegatesVerifyRequest", true), true);
+
+      cipherWithSymmetricKey = new PrintWriter(
+          new FileWriter("data/times/cipherWithSymmetricKey", true), true);
+      cipherWithAsymmetricKey = new PrintWriter(
+          new FileWriter("data/times/cipherWithAsymmetricKey", true), true);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public static synchronized void saveSymmetric(Time time) {
+    cipherWithSymmetricKey.println(time);
+  }
+
+  public static synchronized void saveAsymmetric(Time time) {
+    cipherWithAsymmetricKey.println(time);
   }
 
   public static synchronized void saveIterativeChallenge(Time time) {

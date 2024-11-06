@@ -72,7 +72,7 @@ public class ConnectionHandler implements Runnable {
 
     challengeTime.close();
 
-    TimeCollector.saveConcurrentChallenge(challengeTime, 32);
+    //TimeCollector.saveConcurrentChallenge(challengeTime, 32);
 
     String result = input.readLine();
 
@@ -120,7 +120,7 @@ public class ConnectionHandler implements Runnable {
     BigInteger gToTheX = g.modPow(x, p);
 
     paramsGeneration.close();
-    TimeCollector.saveConcurrentParamsGeneration(paramsGeneration, 32);
+    //TimeCollector.saveConcurrentParamsGeneration(paramsGeneration, 32);
 
     output.println(g);
     output.println(p);
@@ -206,7 +206,7 @@ public class ConnectionHandler implements Runnable {
       boolean verified = Arrays.equals(decryptedIdHMAC, idMessageAndHMAC.getLast());
 
       verifyRequest.close();
-      TimeCollector.saveConcurrentVerifyRequest(verifyRequest, 32);
+      //TimeCollector.saveConcurrentVerifyRequest(verifyRequest, 32);
 
       if (!verified) {
         // Integrity failed
@@ -233,7 +233,20 @@ public class ConnectionHandler implements Runnable {
 
       String response = p == null ? Status.DESCONOCIDO.toString() : p.getStatus().toString();
 
+      Time symmetricTime = new Time();
       byte[] encryptedResponse = encryptWithSymmetricKey(response.getBytes());
+      symmetricTime.close();
+      TimeCollector.saveSymmetric(symmetricTime);
+
+      Time asymmetricTime = new Time();
+
+      Cipher cipher = Cipher.getInstance("RSA");
+      cipher.init(Cipher.ENCRYPT_MODE, privateKey);
+      cipher.doFinal(response.getBytes());
+
+      asymmetricTime.close();
+      TimeCollector.saveAsymmetric(asymmetricTime);
+
       byte[] responseHMAC = getHMAC(response.getBytes());
 
       output.println(String.format("%s;%s", Base64.getEncoder().encodeToString(encryptedResponse), Base64.getEncoder().encodeToString(responseHMAC)));
